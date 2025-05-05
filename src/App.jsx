@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
@@ -67,10 +68,11 @@ function App() {
     const game = games.find((g) => g.id === gameId);
     if (!game) return;
 
-    const transformedRating = newRating; // Não é necessário arredondar, já está multiplicado por 2
+    const transformedRating = newRating;
 
     if (!game.isSavedToBackend) {
       axios.post('http://localhost:8080/Game/criar', {
+        rawgId: game.id,
         name: game.name,
         description: newDescription,
         rating: transformedRating,
@@ -79,34 +81,18 @@ function App() {
       .then((response) => {
         console.log('Jogo criado com sucesso!', response.data);
         setGames(games.map(g =>
-          g.id === gameId ? {
-            ...g,
-            isSavedToBackend: true,
-            customDescription: newDescription,
-            rating: transformedRating
-          } : g
+          g.id === gameId
+            ? {
+                ...g,
+                isSavedToBackend: true,
+                customDescription: newDescription,
+                rating: transformedRating
+              }
+            : g
         ));
       })
       .catch((error) => {
         console.error('Erro ao criar o jogo:', error);
-      });
-    } else {
-      axios.put(`http://localhost:8080/Game/atualizar/${gameId}`, {
-        description: newDescription,
-        rating: transformedRating
-      })
-      .then(() => {
-        console.log('Jogo atualizado com sucesso!');
-        setGames(games.map(g =>
-          g.id === gameId ? {
-            ...g,
-            customDescription: newDescription,
-            rating: transformedRating
-          } : g
-        ));
-      })
-      .catch((error) => {
-        console.error('Erro ao atualizar o jogo:', error);
       });
     }
   };
