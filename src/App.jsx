@@ -37,14 +37,78 @@ function App() {
 
   const addGameToCatalog = (game) => {
     if (!games.some((g) => g.id === game.id)) {
-      setGames((prevGames) => [...prevGames, game]);
-      setPreviewGames([]); // Oculta a pré-visualização ao clicar
-      setSearchQuery(''); // Limpa a barra de busca
+      setGames((prevGames) => [
+        ...prevGames,
+        {
+          ...game,
+          rating: 0,
+          customDescription: "",
+          isSavedToBackend: false
+        }
+      ]);
+      setPreviewGames([]);
+      setSearchQuery('');
     }
   };
 
   const deleteGame = (gameId) => {
     setGames(games.filter((game) => game.id !== gameId));
+  };
+
+  const handleRateGame = (gameId, rating) => {
+    setGames(games.map(game => game.id === gameId ? { ...game, rating } : game));
+  };
+
+  const handleDescriptionChange = (gameId, newDescription) => {
+    setGames(games.map(game => game.id === gameId ? { ...game, customDescription: newDescription } : game));
+  };
+
+  const handleSave = (gameId, newDescription, newRating) => {
+    const game = games.find((g) => g.id === gameId);
+    if (!game) return;
+
+    const transformedRating = newRating; // Não é necessário arredondar, já está multiplicado por 2
+
+    if (!game.isSavedToBackend) {
+      axios.post('http://localhost:8080/Game/criar', {
+        name: game.name,
+        description: newDescription,
+        rating: transformedRating,
+        image: game.background_image || 'https://via.placeholder.com/300x200'
+      })
+      .then((response) => {
+        console.log('Jogo criado com sucesso!', response.data);
+        setGames(games.map(g =>
+          g.id === gameId ? {
+            ...g,
+            isSavedToBackend: true,
+            customDescription: newDescription,
+            rating: transformedRating
+          } : g
+        ));
+      })
+      .catch((error) => {
+        console.error('Erro ao criar o jogo:', error);
+      });
+    } else {
+      axios.put(`http://localhost:8080/Game/atualizar/${gameId}`, {
+        description: newDescription,
+        rating: transformedRating
+      })
+      .then(() => {
+        console.log('Jogo atualizado com sucesso!');
+        setGames(games.map(g =>
+          g.id === gameId ? {
+            ...g,
+            customDescription: newDescription,
+            rating: transformedRating
+          } : g
+        ));
+      })
+      .catch((error) => {
+        console.error('Erro ao atualizar o jogo:', error);
+      });
+    }
   };
 
   const debouncedFetchGames = debounce((query) => fetchGames(query), 500);
@@ -69,7 +133,6 @@ function App() {
     <div>
       <Header onSearch={handleSearchChange} />
 
-      {/* Pré-visualização de jogos logo abaixo do header */}
       {searchQuery.trim() !== '' && previewGames.length > 0 && (
         <div className="preview-container w-100 px-3 px-sm-4 py-3">
           <div className="row">
@@ -97,8 +160,6 @@ function App() {
               </div>
             ))}
           </div>
-
-          {/* Botões de Navegação de Página */}
           <div className="d-flex justify-content-between mt-3">
             <button
               className="btn custom-btn"
@@ -121,36 +182,31 @@ function App() {
         <div className="container mt-4">
           {loading ? (
             <div className="loading-spinner-container">
-              <div className="spinner-border" role="status">
-                <span className="sr-only"></span>
-              </div>
+              <div className="spinner-border" role="status" />
             </div>
           ) : (
-            <div>
-              {/* Catálogo final de jogos adicionados */}
-              <div className="row">
-                {games.map((game) => (
-                  <div className="col-12 col-md-6 col-lg-4 mb-4" key={game.id}>
-                    <GameList
-                      image={game.background_image}
-                      name={game.name}
-                      description={game.customDescription || game.seo_description || "Descrição não disponível"}
-                      customDescription={game.customDescription}
-                      gameId={game.id}
-                      onDelete={deleteGame}
-                      onDescriptionChange={(newDescription) => {
-                        setGames(games.map(g => g.id === game.id ? { ...g, customDescription: newDescription } : g));
-                      }}
-                      onSave={() => handleSave(game.id, game.customDescription)}
-                      isSaved={game.backendId !== null}
-                    />
-                  </div>
-                ))}
-              </div>
+            <div className="row">
+              {games.map((game) => (
+                <div className="col-md-4" key={game.id}>
+                  <GameList
+                    gameId={game.id}
+                    image={game.background_image}
+                    name={game.name}
+                    description={game.description}
+                    customDescription={game.customDescription}
+                    rating={game.rating}
+                    onDelete={deleteGame}
+                    onSave={handleSave}
+                    onDescriptionChange={handleDescriptionChange}
+                    onRate={handleRateGame}
+                  />
+                </div>
+              ))}
             </div>
           )}
         </div>
       </main>
+
       <Footer />
     </div>
   );

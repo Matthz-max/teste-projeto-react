@@ -5,6 +5,7 @@ body {
   background: var(--bg-color, #fff);
   color: var(--text-color, #222);
   transition: background 0.3s, color 0.3s;
+  
 }
 
 .card {
@@ -20,6 +21,10 @@ body {
   color: var(--text-color, #222);
   transition: background 0.3s, color 0.3s;
 }
+.card:hover{ 
+  transform: scale(1.05);
+  transition: .6s;
+}
 
 .card-img-top {
   width: 100%;
@@ -29,7 +34,7 @@ body {
 }
 
 .card-body {
-  flex: 1; /* Faz o conteúdo do card ocupar o espaço restante */
+  flex: 1;  
   padding: 15px;
 }
 
@@ -37,9 +42,7 @@ body {
   .card {
     margin: 10px;
   }
-}
-
-/* Ajuste no botão */
+} 
 .btn-primary {
   background-color: var(--primary-btn, #007bff);
   border: none;
@@ -52,19 +55,4 @@ body {
 .btn-primary:hover {
   background-color: var(--primary-btn-hover, #0056b3);
 }
-
-/* Estilos das estrelas de avaliação */
-.star {
-  font-size: 1.5rem;
-  color: #d3d3d3; /* Cor das estrelas não preenchidas */
-}
-
-.star.filled {
-  color: #ffcc00; /* Cor das estrelas preenchidas */
-}
-
-.stars-container {
-  margin-top: 10px;
-  display: flex;
-  gap: 5px;
-}
+  
