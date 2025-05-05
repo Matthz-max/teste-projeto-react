@@ -20,7 +20,7 @@ body {
 
 /* Deixar o conteúdo da aplicação ocupar o máximo de altura possível */
 main {  
-  min-height: 600px;
+  min-height: 500px;
   flex: 1;
   padding: 20px;
   overflow-y: auto;  /* Para evitar overflow na tela */

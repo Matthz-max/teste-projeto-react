@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
@@ -42,10 +43,10 @@ function App() {
         {
           ...game,
           rating: 0,
-          customDescription: "",
+          customDescription: '',
           isSavedToBackend: false,
           backendId: null,
-        }
+        },
       ]);
       setPreviewGames([]);
       setSearchQuery('');
@@ -75,29 +76,30 @@ function App() {
     const transformedRating = newRating;
 
     if (!game.isSavedToBackend) {
-      axios.post('http://localhost:8080/Game/criar', {
-        rawgId: game.id,
-        name: game.name,
-        description: newDescription,
-        rating: transformedRating,
-        image: game.background_image || 'https://via.placeholder.com/300x200',
-      })
-      .then((response) => {
-        setGames(games.map((g) =>
-          g.id === gameId
-            ? {
-                ...g,
-                isSavedToBackend: true,
-                customDescription: newDescription,
-                rating: transformedRating,
-                backendId: response.data.id,
-              }
-            : g
-        ));
-      })
-      .catch((error) => {
-        console.error('Erro ao criar o jogo:', error);
-      });
+      axios
+        .post('http://localhost:8080/Game/criar', {
+          rawgId: game.id,
+          name: game.name,
+          description: newDescription,
+          rating: transformedRating,
+          image: game.background_image || 'https://via.placeholder.com/300x200',
+        })
+        .then((response) => {
+          setGames(games.map((g) =>
+            g.id === gameId
+              ? {
+                  ...g,
+                  isSavedToBackend: true,
+                  customDescription: newDescription,
+                  rating: transformedRating,
+                  backendId: response.data.id,
+                }
+              : g
+          ));
+        })
+        .catch((error) => {
+          console.error('Erro ao criar o jogo:', error);
+        });
     } else {
       axios.put(`http://localhost:8080/Game/atualizar/${game.backendId}`, {
         rawgId: game.id,
@@ -189,8 +191,10 @@ function App() {
       <main>
         <div className="container mt-4">
           {loading ? (
-            <div className="loading-spinner-container">
-              <div className="spinner-border" role="status" />
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+              <div className="spinner-border" role="status">
+                <span className="sr-only"></span>
+              </div>
             </div>
           ) : (
             <div className="row">
