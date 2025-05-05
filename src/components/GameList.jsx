@@ -6,7 +6,8 @@ function GameList({
   image,
   name,
   description,
-  gameId,
+  gameId, // Agora isso é o rawgId
+  backendId, // Agora temos o backendId que será usado para o PUT
   onDelete,
   customDescription,
   onDescriptionChange,
@@ -35,20 +36,24 @@ function GameList({
   };
 
   const handleEdit = () => {
-    axios.put(`http://localhost:8080/Game/atualizar/${gameId}`, {
-      rawgId: gameId,
-      name: name,
-      description: newDescription,
-      rating: newRating,
-      image: image
-    })
-    .then(() => {
-      console.log('Jogo atualizado com sucesso!');
-      onSave(gameId, newDescription, newRating);
-    })
-    .catch((error) => {
-      console.error('Erro ao atualizar o jogo:', error.response ? error.response.data : error);
-    });
+    if (backendId) {
+      axios.put(`http://localhost:8080/Game/atualizar/${backendId}`, {
+        rawgId: gameId,  // Enviando o rawgId da API externa
+        name: name,
+        description: newDescription,
+        rating: newRating,
+        image: image
+      })
+      .then((response) => {
+        console.log('Jogo atualizado com sucesso!');
+        onSave(gameId, newDescription, newRating); // Atualizando o estado com os dados do backend
+      })
+      .catch((error) => {
+        console.error('Erro ao atualizar o jogo:', error.response ? error.response.data : error);
+      });
+    } else {
+      console.error('backendId está indefinido');
+    }
   };
 
   return (
@@ -91,7 +96,8 @@ function GameList({
           ))}
         </div>
         
-        { !customDescription && (
+        {/* Botão Salvar ou Editar */}
+        { !customDescription ? (
           <button 
             className="btn btn-primary mb-2"
             onClick={handleSave}
@@ -99,11 +105,9 @@ function GameList({
           >
             Salvar  
           </button>
-        )}
-
-        { customDescription && (
+        ) : (
           <button 
-            className="btn btn-warning mb-2"
+            className="btn btn-warning mb-2" // Amarelo para editar
             onClick={handleEdit}
             disabled={!(isDescriptionChanged || isRatingChanged)} 
           >

@@ -1,4 +1,3 @@
-// App.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
@@ -44,7 +43,8 @@ function App() {
           ...game,
           rating: 0,
           customDescription: "",
-          isSavedToBackend: false
+          isSavedToBackend: false,
+          backendId: null,
         }
       ]);
       setPreviewGames([]);
@@ -53,15 +53,19 @@ function App() {
   };
 
   const deleteGame = (gameId) => {
-    setGames(games.filter((game) => game.id !== gameId));
-  };
-
-  const handleRateGame = (gameId, rating) => {
-    setGames(games.map(game => game.id === gameId ? { ...game, rating } : game));
-  };
-
-  const handleDescriptionChange = (gameId, newDescription) => {
-    setGames(games.map(game => game.id === gameId ? { ...game, customDescription: newDescription } : game));
+    const gameToDelete = games.find(game => game.id === gameId);
+    if (gameToDelete && gameToDelete.backendId) {
+      axios
+        .delete(`http://localhost:8080/Game/deletar/${gameToDelete.backendId}`)
+        .then(() => {
+          setGames(games.filter((game) => game.id !== gameId));
+        })
+        .catch((error) => {
+          console.error('Erro ao deletar jogo:', error);
+        });
+    } else {
+      console.error('Jogo não encontrado ou sem backendId');
+    }
   };
 
   const handleSave = (gameId, newDescription, newRating) => {
@@ -76,23 +80,41 @@ function App() {
         name: game.name,
         description: newDescription,
         rating: transformedRating,
-        image: game.background_image || 'https://via.placeholder.com/300x200'
+        image: game.background_image || 'https://via.placeholder.com/300x200',
       })
       .then((response) => {
-        console.log('Jogo criado com sucesso!', response.data);
-        setGames(games.map(g =>
+        setGames(games.map((g) =>
           g.id === gameId
             ? {
                 ...g,
                 isSavedToBackend: true,
                 customDescription: newDescription,
-                rating: transformedRating
+                rating: transformedRating,
+                backendId: response.data.id,
               }
             : g
         ));
       })
       .catch((error) => {
         console.error('Erro ao criar o jogo:', error);
+      });
+    } else {
+      axios.put(`http://localhost:8080/Game/atualizar/${game.backendId}`, {
+        rawgId: game.id,
+        name: game.name,
+        description: newDescription,
+        rating: transformedRating,
+        image: game.background_image || 'https://via.placeholder.com/300x200',
+      })
+      .then(() => {
+        setGames(games.map((g) =>
+          g.id === gameId
+            ? { ...g, customDescription: newDescription, rating: transformedRating }
+            : g
+        ));
+      })
+      .catch((error) => {
+        console.error('Erro ao atualizar o jogo:', error);
       });
     }
   };
@@ -181,10 +203,21 @@ function App() {
                     description={game.description}
                     customDescription={game.customDescription}
                     rating={game.rating}
+                    backendId={game.backendId}
                     onDelete={deleteGame}
                     onSave={handleSave}
-                    onDescriptionChange={handleDescriptionChange}
-                    onRate={handleRateGame}
+                    onDescriptionChange={(gameId, newDescription) => {
+                      const updatedGames = games.map((g) =>
+                        g.id === gameId ? { ...g, customDescription: newDescription } : g
+                      );
+                      setGames(updatedGames);
+                    }}
+                    onRate={(gameId, newRating) => {
+                      const updatedGames = games.map((g) =>
+                        g.id === gameId ? { ...g, rating: newRating } : g
+                      );
+                      setGames(updatedGames);
+                    }}
                   />
                 </div>
               ))}

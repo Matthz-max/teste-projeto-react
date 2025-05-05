@@ -2,6 +2,7 @@
 
 body {
   min-height: 400px;
+ 
   background: var(--bg-color, #fff);
   color: var(--text-color, #222);
   transition: background 0.3s, color 0.3s;
